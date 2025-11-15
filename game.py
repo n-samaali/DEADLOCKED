@@ -40,8 +40,11 @@ class Game:
     def start(self, context):
         event = ""
         a = generator.call_ai(event, context, prompt="")
-        print(a)
-        self.options = generator.parse_options(a)
+        story, table = generator.split_story_and_table(a)
+        print(story)
+        # print(table)
+        #print(a)
+        self.options = generator.parse_options(table)
         print(self.options)
         return self.options
         
@@ -50,7 +53,10 @@ class Game:
         self.card_verificator(event[0])
         
         a = generator.call_ai(event[0], self.options[choice])
-        print(a)
+        story, table = generator.split_story_and_table(a)
+        print(story)
+        # print(dm)
+        # print(table)
         hp_stuff = generator.extract_modifier(a)
         
         if hp_stuff[0] is not None:
@@ -64,6 +70,7 @@ class Game:
 
             print("Current HP:", self.person.hp)
     
-        self.options = generator.parse_options(a)
+        self.options = generator.parse_options(table)
         print(self.options)
+        return self.options
         

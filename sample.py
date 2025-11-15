@@ -13,7 +13,9 @@ p = Person.Person()
 
 game = game.Game()
 print(p.hp)
-game.start()
+game.start("I wake up in a cave by the ocean after taking a short nap in the office.")
+#game.start()
 #while (not p.is_dead):
 for i in range(4):
-    game.next_turn('Strength')
+    e = game.draw_card()
+    game.next_turn('Strength', e)

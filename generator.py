@@ -24,11 +24,9 @@ chat_session = model.start_chat(
 
 def call_ai(event, context, prompt=""):
     if prompt=="":
-      prompt = f"""
-
-      make a dungeons and dragons game where you are the dungeon master and you have to give me exactly 4 options. 
+      prompt = f""" make a dungeons and dragons game where you are the dungeon master and you have to give me EXACTLY 4 OPTIONS.
       output the four options (strength, dexterity, intelligence, charsima) in 
-      a clear markdown table to be parsed (Extract rows of the form: | **Strength** | description |). There will be a turn logic where a card will be randomly pulled from the deck and each numbered card will scale the option
+      a clear markdown table to be parsed (Extract rows of the form: | **Strength** | description |). THE MARKDOWN TABLE CANNOT BE EMPTY. There will be a turn logic where a card will be randomly pulled from the deck and each numbered card will scale the option
       and each figure (J,Q,K) returns an event. The card that was pulled will be provided to you and included in the next event in this format (2H:).
       For each turn, you have to follow the same context (We will feed you back the option that was chosen, but provide answers in a consisten format). Also, the
       character will have hp that will increase or decrease depending on the events. We will also provide the stats, do not assume stats, they will be handled
@@ -38,27 +36,60 @@ def call_ai(event, context, prompt=""):
 
       """
       prompt = context + prompt
+      #print(prompt)
     else:
       prompt = event + prompt
     return (chat_session.send_message(prompt)).text
 
+# def parse_options(markdown_table: str):
+#     """
+#     Parse a 4-option D&D-style table (Strength, Dexterity, Intelligence, Charisma)
+#     into a dictionary: { option_name: description }
+#     """
+
+#     options = {}
+
+#     # Extract rows of the form: | **Strength** | description |
+#     rows = re.findall(r"\|\s*\*\*(.*?)\*\*\s*\|\s*(.*?)\s*\|", markdown_table, re.DOTALL)
+
+#     for option, desc in rows:
+#         option = option.strip()
+#         desc = desc.replace("\n", " ").strip()
+#         options[option] = desc
+
+#     return options
+
 def parse_options(markdown_table: str):
     """
-    Parse a 4-option D&D-style table (Strength, Dexterity, Intelligence, Charisma)
-    into a dictionary: { option_name: description }
+    Parse a 4-option table into a dict:
+    { "Strength": "Attempt to force open..." }
     """
 
     options = {}
 
-    # Extract rows of the form: | **Strength** | description |
-    rows = re.findall(r"\|\s*\*\*(.*?)\*\*\s*\|\s*(.*?)\s*\|", markdown_table, re.DOTALL)
+    # Extract rows like:
+    # | **Strength** | Attempt to... |
+    rows = re.findall(
+        r"\|\s*\*\*(.*?)\*\*\s*\|\s*(.*?)\s*\|",
+        markdown_table,
+        re.DOTALL
+    )
 
-    for option, desc in rows:
-        option = option.strip()
-        desc = desc.replace("\n", " ").strip()
-        options[option] = desc
+    for opt, desc in rows:
+        opt = opt.strip()
+        desc = " ".join(desc.split())  # clean whitespace
+        options[opt] = desc
 
     return options
+
+
+def split_story_and_table(text: str):
+    import re
+    story_match = re.search(r"```(.*?)```", text, re.DOTALL)
+    story_text = story_match.group(1).strip() if story_match else ""
+
+    remainder = re.sub(r"```.*?```", "", text, flags=re.DOTALL).strip()
+    return story_text, remainder
 
 def extract_modifier(text: str):
     """
