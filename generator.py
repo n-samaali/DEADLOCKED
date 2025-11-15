@@ -22,12 +22,12 @@ chat_session = model.start_chat(
   ]
 )
 
-def call_ai(event, prompt=""):
+def call_ai(event, context, prompt=""):
     if prompt=="":
       prompt = f"""
 
       make a dungeons and dragons game where you are the dungeon master and you have to give me exactly 4 options. 
-      context would be in a old tech company. output the four options (strength, dexterity, intelligence, charsima) in 
+      output the four options (strength, dexterity, intelligence, charsima) in 
       a clear markdown table to be parsed (Extract rows of the form: | **Strength** | description |). There will be a turn logic where a card will be randomly pulled from the deck and each numbered card will scale the option
       and each figure (J,Q,K) returns an event. The card that was pulled will be provided to you and included in the next event in this format (2H:).
       For each turn, you have to follow the same context (We will feed you back the option that was chosen, but provide answers in a consisten format). Also, the
@@ -37,6 +37,7 @@ def call_ai(event, prompt=""):
       so I know to change the player's hp and format it properly. Do not tell the player about coding things like provide me this and that. Just do what you are told in the prompt.
 
       """
+      prompt = context + prompt
     else:
       prompt = event + prompt
     return (chat_session.send_message(prompt)).text

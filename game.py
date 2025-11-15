@@ -35,18 +35,17 @@ class Game:
         if key=="KS":
             while(not self.person.is_dead):
                 self.person.reduce_hp(15)
-        
-        
+          
             
-    def start(self):
+    def start(self, context):
         event = ""
-        a = generator.call_ai(event, prompt="")
+        a = generator.call_ai(event, context, prompt="")
         print(a)
         self.options = generator.parse_options(a)
         print(self.options)
+        return self.options
         
-    def next_turn(self, choice):
-        event = self.draw_card()
+    def next_turn(self, choice, event):
         print(event[1])#the ascii card
         self.card_verificator(event[0])
         

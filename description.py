@@ -19,7 +19,7 @@ def pioche():
     if card_letter in description:
         event = description[card_letter]
     return ((card_letter + ":" + event), card_ascii(rank_dictionary[rank], suit_dictionary[suit]))
-    
+
 def card_ascii(rank, suit, width=13, height=7):
     """
     rank: string, e.g. 'A', '10', 'K'
