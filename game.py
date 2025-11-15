@@ -40,12 +40,8 @@ class Game:
         event = ""
         a = self.ai_handler.call_ai(event, context, prompt="")
         story, table = self.ai_handler.split_story_and_table(a)
-        print(story)
-        # print(table)
-        #print(a)
         self.options = self.ai_handler.parse_options(table)
-        print(self.options)
-        return self.options
+        return story, self.options
         
     def next_turn(self, choice, event):
         print(event[1])#the ascii card
@@ -70,6 +66,5 @@ class Game:
             print("Current HP:", self.person.hp)
     
         self.options = self.ai_handler.parse_options(table)
-        print(self.options)
-        return self.options
+        return story, self.options
         
