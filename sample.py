@@ -12,6 +12,8 @@ p = Person.Person()
 #     print(event)
 
 game = game.Game()
+print(p.hp)
 game.start()
-while (not p.is_dead):
-    game.next_turn()
+#while (not p.is_dead):
+for i in range(4):
+    game.next_turn('Strength')
