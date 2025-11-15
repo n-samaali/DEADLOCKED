@@ -11,7 +11,7 @@ p = Person.Person()
 #     event = description.pioche()
 #     print(event)
 
-game = game.Game()
+game = game.Game(key="AIzaSyDduw3y8iM1vMjR0EGEyfIfp8qE3aj93iE")
 print(p.hp)
 game.start("I wake up in a cave by the ocean after taking a short nap in the office.")
 #game.start()
