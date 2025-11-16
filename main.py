@@ -7,6 +7,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.traceback import Traceback
 from textual.containers import Horizontal, Vertical
+from textual.binding import Binding
 
 from rich.panel import Panel
 from rich.box import Box, DOUBLE, ROUNDED, SQUARE, HEAVY
@@ -53,6 +54,8 @@ from textual.widgets import (
     Tree,
 )
 
+from game import Game
+
 class ActionButtons(containers.VerticalGroup):
     """Buttons demo."""
 
@@ -73,6 +76,7 @@ class ActionButtons(containers.VerticalGroup):
                 "Strength",
                 id="strength-button",
                 variant="success",
+                disabled=self.app.DISABLE_BUTTONS,
                 #tooltip="",
                 #action="notify('You chose Strength')",
             )
@@ -80,6 +84,7 @@ class ActionButtons(containers.VerticalGroup):
                 "Dexterity",
                 id="dexterity-button",
                 variant="primary",
+                disabled=self.app.DISABLE_BUTTONS,
                 #tooltip="The primary button style - carry out the core action of the dialog",
                 #action="notify('You chose Dexterity')",
             )
@@ -87,6 +92,7 @@ class ActionButtons(containers.VerticalGroup):
                 "Intelligence",
                 id="intelligence-button",
                 variant="warning",
+                disabled=self.app.DISABLE_BUTTONS,
                 #tooltip="The warning button style - warn the user that this isn't a typical button",
                 #action="notify('You chose Intelligence')",
             )
@@ -94,6 +100,7 @@ class ActionButtons(containers.VerticalGroup):
                 "Charisma",
                 id="charisma-button",
                 variant="error",
+                disabled=self.app.DISABLE_BUTTONS,
                 #tooltip="The error button style - clicking is a destructive action",
                 #action="notify('You chose Charisma')",                
             )
@@ -149,11 +156,18 @@ class UserStats(containers.VerticalGroup) :
 
         
     def on_mount(self) -> None:
-        self.query_one("#health").update(progress=100)
-        self.query_one("#strength").update(progress=70)
-        self.query_one("#dexterity").update(progress=70)
-        self.query_one("#intelligence").update(progress=70)
-        self.query_one("#charisma").update(progress=70)
+        
+        health_init = self.app.game.person.hp
+        strength_init = self.app.game.person.strength
+        dexterity_init = self.app.game.person.dexterity
+        intelligence_init = self.app.game.person.intelligence
+        charisma_init = self.app.game.person.charisma
+
+        self.query_one("#health").update(progress=health_init)
+        self.query_one("#strength").update(progress=strength_init)
+        self.query_one("#dexterity").update(progress=dexterity_init)
+        self.query_one("#intelligence").update(progress=intelligence_init)
+        self.query_one("#charisma").update(progress=charisma_init)
 
         
 class Logs(containers.VerticalGroup):
@@ -322,6 +336,11 @@ class SidePanel(containers.VerticalGroup) :
         )
         card_display.update(panel)
         
+    def update_card_description(self, description) :
+        card_description = self.query_one("#card_description")
+        card_description.text = description
+
+        
             
 class MainPanel(containers.VerticalGroup) :
     
@@ -352,6 +371,10 @@ class MainPanel(containers.VerticalGroup) :
             "strength", 
             "You flex your muscles and prepare to overcome the obstacle with raw power!"
         )
+        self.app.DISABLE_BUTTONS = True
+        self.update_game("Strength")
+
+
         
     @on(Button.Pressed, "#dexterity-button")
     def on_button_press_dexterity(self, event: Button.Pressed) -> None:
@@ -360,6 +383,10 @@ class MainPanel(containers.VerticalGroup) :
             "dexterity",
             "With lightning reflexes, you attempt to navigate the challenge with precision and grace."
         )
+        self.app.DISABLE_BUTTONS = True
+        self.update_game("Dexterity")
+
+
         
     @on(Button.Pressed, "#intelligence-button")
     def on_button_press_intelligence(self, event: Button.Pressed) -> None:
@@ -368,6 +395,10 @@ class MainPanel(containers.VerticalGroup) :
             "intelligence", 
             "You analyze the situation carefully, searching for patterns and logical solutions."
         )
+        self.app.DISABLE_BUTTONS = True
+        self.update_game("Intelligence")
+
+
         
     @on(Button.Pressed, "#charisma-button")
     def on_button_press_charisma(self, event: Button.Pressed) -> None:
@@ -376,6 +407,39 @@ class MainPanel(containers.VerticalGroup) :
             "charisma",
             "You turn on the charm, using wit and persuasion to sway the situation in your favor."
         )
+        self.app.DISABLE_BUTTONS = True
+        self.update_game("Charisma")
+
+    def update_game(self, option):
+        new_card = self.app.game.draw_card()
+        side_panel = self.screen.query_one("#display-panel", SidePanel)
+        
+        story, options = self.app.game.next_turn(option, new_card)
+        
+        self.app.current_story = story.split(":")[1]
+        self.app.current_option = options
+        
+        DM_OUTPUT = self.query_one("#dungeon-master")
+        
+        DM_OUTPUT.write_action_message("default", self.app.current_story)
+        
+        output_options = f"""
+Select your next move :
+1. Strength : {self.app.current_option["Strength"]}
+2. Dexterity : {self.app.current_option["Dexterity"]}
+3. Intelligence : {self.app.current_option["Intelligence"]}
+4. Charisma : {self.app.current_option["Charisma"]}
+        """
+        
+        DM_OUTPUT.write_action_message("default", output_options)
+        
+        
+        self.app.current_story = story
+        self.app.current_option = option
+        
+        side_panel.update_card_display(new_card[1])
+        side_panel.update_card_description(new_card[0])
+        
         
 class GameUI(Screen):
     
@@ -396,9 +460,31 @@ class GameUI(Screen):
             v_group = containers.Vertical(id="side_panel")
             v_group.border_title = "Player's Deck"
             with v_group :
-                yield SidePanel()
+                yield SidePanel(id="display-panel")
             with containers.VerticalGroup(id="main_panel"):
                 yield MainPanel()
+                
+    def on_mount(self):
+        game_response = self.app.game.start(self.app.story_prompt)
+        self.app.current_story = game_response[0]
+        self.app.current_option = game_response[1]
+        
+        DM_OUTPUT = self.query_one("#dungeon-master")
+        
+        DM_OUTPUT.write_action_message("default", self.app.current_story)
+        
+        output_options = f"""
+Select your next move :
+1. Strength : {self.app.current_option["Strength"]}
+2. Dexterity : {self.app.current_option["Dexterity"]}
+3. Intelligence : {self.app.current_option["Intelligence"]}
+4. Charisma : {self.app.current_option["Charisma"]}
+        """
+        
+        DM_OUTPUT.write_action_message("default", output_options)
+        
+        self.app.DISABLE_BUTTONS = False
+        
                 
 class StartScreen(Screen):
     
@@ -467,6 +553,11 @@ class StartScreen(Screen):
     }
     """
     
+    BINDINGS = [
+        ("ctrl+v", "paste", "Paste"),
+    ]
+
+    
     def compose(self) -> ComposeResult:
         # Main container that centers everything
         with containers.Center():
@@ -530,6 +621,8 @@ class StartScreen(Screen):
         self.app.api_key = api_key
         self.app.story_prompt = story_prompt
         
+        self.app.game = Game(self.app.api_key)
+        
         # Navigate to the game screen
         self.app.switch_screen("game-ui")  # Changed from push_screen to switch_screen
         
@@ -540,6 +633,8 @@ class GameApp(App[None]):
     
     def compose(self) -> ComposeResult:
         self.app.theme = "gruvbox"
+        self.app.DISABLE_BUTTONS = False
+
         # Install the screen but don't compose anything yet
         self.install_screen(StartScreen(), name="start-screen")
         self.install_screen(GameUI(), name="game-ui")
