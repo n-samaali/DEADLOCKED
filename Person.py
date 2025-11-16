@@ -29,8 +29,8 @@ class Person:
         self.increase_hp(value)
     
     def game_over(self):
+        self.hp = 0
         self.is_dead = True
-        print("YOU DIED (of course it's a Dark Souls reference!)")
         
     def _modify_stat(self, stat_name, value):
         """Generic internal function to modify any stat safely."""

@@ -149,7 +149,7 @@ class UserStats(containers.VerticalGroup) :
                     yield ProgressBar(total=100, gradient=gradient_health, id="health", show_percentage=True, show_eta=False)
                     yield Label("Strength", classes="stat-label")
                     yield ProgressBar(total=100, gradient=gradient_strength, id="strength", show_percentage=True, show_eta=False)
-                    yield Label("Dexteritiy", classes="stat-label")
+                    yield Label("Dexterity", classes="stat-label")
                     yield ProgressBar(total=100, gradient=gradient_dexterity, id="dexterity", show_percentage=True, show_eta=False)
                     yield Label("Intelligence", classes="stat-label")
                     yield ProgressBar(total=100, gradient=gradient_intelligence, id="intelligence", show_percentage=True, show_eta=False)
@@ -158,22 +158,62 @@ class UserStats(containers.VerticalGroup) :
 
         
     def on_mount(self) -> None:
-        self.update_user_stats()
+        self.app.curr_health = self.app.game.person.hp
+        self.app.curr_strength = self.app.game.person.strength
+        self.app.curr_dexterity = self.app.game.person.dexterity
+        self.app.curr_intelligence = self.app.game.person.intelligence
+        self.app.curr_charisma = self.app.game.person.charisma
+        
+        self.query_one("#health").update(progress=self.app.curr_health)
+        self.query_one("#strength").update(progress=self.app.curr_strength)
+        self.query_one("#dexterity").update(progress=self.app.curr_dexterity)
+        self.query_one("#intelligence").update(progress=self.app.curr_intelligence)
+        self.query_one("#charisma").update(progress=self.app.curr_charisma)
 
     def update_user_stats(self) :
-        health_init = self.app.game.person.hp
-        strength_init = self.app.game.person.strength
-        dexterity_init = self.app.game.person.dexterity
-        intelligence_init = self.app.game.person.intelligence
-        charisma_init = self.app.game.person.charisma
-
-        self.query_one("#health").update(progress=health_init)
-        self.query_one("#strength").update(progress=strength_init)
-        self.query_one("#dexterity").update(progress=dexterity_init)
-        self.query_one("#intelligence").update(progress=intelligence_init)
-        self.query_one("#charisma").update(progress=charisma_init)
         
+        logs = self.app.screen.query_one("#dungeon-master")
+        
+        self.app.prev_health = self.app.curr_health
+        self.app.prev_strength = self.app.curr_strength
+        self.app.prev_dexterity = self.app.curr_dexterity
+        self.app.prev_intelligence = self.app.curr_intelligence
+        self.app.prev_charisma = self.app.curr_charisma
+        
+        
+        self.app.curr_health = self.app.game.person.hp
+        self.app.curr_strength = self.app.game.person.strength
+        self.app.curr_dexterity = self.app.game.person.dexterity
+        self.app.curr_intelligence = self.app.game.person.intelligence
+        self.app.curr_charisma = self.app.game.person.charisma
+        
+        health_factor = self.app.curr_health - self.app.prev_health
+        strength_factor = self.app.curr_strength - self.app.prev_strength
+        dexterity_factor = self.app.curr_dexterity - self.app.prev_dexterity
+        intelligence_factor = self.app.curr_intelligence - self.app.prev_intelligence
+        charisma_factor = self.app.curr_charisma - self.app.prev_charisma
+        
+        if health_factor != 0 :
+            message = f"Your health increased {health_factor}%" if health_factor > 0 else f"Your health decreased {abs(health_factor)}%"
+            logs.write_action_message("health", message)
+        if strength_factor != 0 :
+            message = f"Your strength increased {strength_factor}%" if strength_factor > 0 else f"Your strength decreased {abs(strength_factor)}%"
+            logs.write_action_message("strength", message)
+        if dexterity_factor != 0 :
+            message = f"Your dexterity increased {dexterity_factor}%" if dexterity_factor > 0 else f"Your strength decreased {abs(dexterity_factor)}%"
+            logs.write_action_message("dexterity", message)
+        if intelligence_factor != 0 :
+            message = f"Your intelligence increased {intelligence_factor}%" if intelligence_factor > 0 else f"Your intelligence decreased {abs(intelligence_factor)}%"
+            logs.write_action_message("intelligence", message)
+        if charisma_factor != 0 :
+            message = f"Your charisma increased {charisma_factor}%" if charisma_factor > 0 else f"Your charisma decreased {abs(charisma_factor)}%"
+            logs.write_action_message("charisma", message)
 
+        self.query_one("#health").update(progress=self.app.curr_health)
+        self.query_one("#strength").update(progress=self.app.curr_strength)
+        self.query_one("#dexterity").update(progress=self.app.curr_dexterity)
+        self.query_one("#intelligence").update(progress=self.app.curr_intelligence)
+        self.query_one("#charisma").update(progress=self.app.curr_charisma)
         
 class Logs(containers.VerticalGroup):
 
@@ -246,7 +286,7 @@ class Logs(containers.VerticalGroup):
             "default": (ROUNDED, "bold #ebdbb2"),
             "options": (ROUNDED, "#595959"),
             "game-over" : (ROUNDED, "bold #fa4934"),
-            "stat-update" : (ROUNDED, "bold #8ec07c")
+            "health" : (ROUNDED, "bold #8ec07c")
         }
         
         box, style = box_styles.get(action_type.lower(), box_styles["default"])
@@ -258,10 +298,8 @@ class Logs(containers.VerticalGroup):
             title = "CHOOSE YOUR ACTION"
         elif action_type.lower() == "game-over":
             title = "GAME OVER"
-        elif action_type.lower() == "stat-update":
-            title = "PLAYER STAT. UPDATE"
         else:
-            title = f"{action_type.upper()} ACTION"
+            title = f"{action_type.upper()}"
         
         self.write_framed_message(
             message,
@@ -374,7 +412,7 @@ class SidePanel(containers.VerticalGroup) :
         if left and right == "":  
             # left is like "8H" → numeric part is everything except last char (suit)
             numeric = left[:-1] if left[-1].isalpha() else left
-            description_output = f"Asserts action scale factor of {numeric} points"
+            description_output = f"Most recent action performed with a scale factor of {numeric} points."
 
         # CASE 2 — FORMAT LIKE "7H:xyz" → action factor + text
         elif left and right:
@@ -426,49 +464,53 @@ class MainPanel(containers.VerticalGroup) :
     
     @on(Button.Pressed, "#strength-button")
     def on_button_press_strength(self, event: Button.Pressed) -> None:
-        log_widget = self.query_one(Logs)
-        log_widget.write_action_message(
-            "strength", 
-            "You flex your muscles and prepare to overcome the obstacle with raw power!"
-        )
-        self.app.DISABLE_BUTTONS = True
-        self.update_game("Strength")
+        if self.app.game.person.is_dead == False:
+            log_widget = self.query_one(Logs)
+            log_widget.write_action_message(
+                "strength", 
+                "You flex your muscles and prepare to overcome the obstacle with raw power!"
+            )
+            self.app.DISABLE_BUTTONS = True
+            self.update_game("Strength")
 
 
         
     @on(Button.Pressed, "#dexterity-button")
     def on_button_press_dexterity(self, event: Button.Pressed) -> None:
-        log_widget = self.query_one(Logs)
-        log_widget.write_action_message(
-            "dexterity",
-            "With lightning reflexes, you attempt to navigate the challenge with precision and grace."
-        )
-        self.app.DISABLE_BUTTONS = True
-        self.update_game("Dexterity")
+        if self.app.game.person.is_dead == False:
+            log_widget = self.query_one(Logs)
+            log_widget.write_action_message(
+                "dexterity",
+                "With lightning reflexes, you attempt to navigate the challenge with precision and grace."
+            )
+            self.app.DISABLE_BUTTONS = True
+            self.update_game("Dexterity")
 
 
         
     @on(Button.Pressed, "#intelligence-button")
     def on_button_press_intelligence(self, event: Button.Pressed) -> None:
-        log_widget = self.query_one(Logs)
-        log_widget.write_action_message(
-            "intelligence", 
-            "You analyze the situation carefully, searching for patterns and logical solutions."
-        )
-        self.app.DISABLE_BUTTONS = True
-        self.update_game("Intelligence")
+        if self.app.game.person.is_dead == False:
+            log_widget = self.query_one(Logs)
+            log_widget.write_action_message(
+                "intelligence", 
+                "You analyze the situation carefully, searching for patterns and logical solutions."
+            )
+            self.app.DISABLE_BUTTONS = True
+            self.update_game("Intelligence")
 
 
         
     @on(Button.Pressed, "#charisma-button")
     def on_button_press_charisma(self, event: Button.Pressed) -> None:
-        log_widget = self.query_one(Logs)
-        log_widget.write_action_message(
-            "charisma",
-            "You turn on the charm, using wit and persuasion to sway the situation in your favor."
-        )
-        self.app.DISABLE_BUTTONS = True
-        self.update_game("Charisma")
+        if self.app.game.person.is_dead == False:
+            log_widget = self.query_one(Logs)
+            log_widget.write_action_message(
+                "charisma",
+                "You turn on the charm, using wit and persuasion to sway the situation in your favor."
+            )
+            self.app.DISABLE_BUTTONS = True
+            self.update_game("Charisma")
 
     def update_game(self, option):
         new_card = self.app.game.draw_card()
@@ -497,6 +539,11 @@ class MainPanel(containers.VerticalGroup) :
         
         user_stats = self.app.screen.query_one("#user_stats", UserStats)
         user_stats.update_user_stats()
+        
+        if self.app.game.person.is_dead == True :
+            logs = self.query_one("#dungeon-master")
+            logs.write_action_message("game_over", logs.YOU_DIED_TITLE)
+            return
         
         side_panel.update_card_display(new_card[1])
         
@@ -577,7 +624,7 @@ class StartScreen(Screen):
     #title {
         width: auto;
         height: auto;
-        border: heavy white 10%;
+        /* border: heavy white 10%; */
         padding: 1;
         background: $boost;
         align-horizontal: center;
