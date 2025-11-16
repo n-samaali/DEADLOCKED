@@ -1,10 +1,10 @@
 import random
 #coeur, carreau, trefle, pique
 # hearts, diamond, spade, clubs
-description = {"JH":"Checks your PC's RAM. If it's lower or equal to 8GB, the game crashes and it's Game Over, else the game continues", "QH":"The Queen of Hearts executes you. Game Over", "KH": "Adds 50 hp to compensate for his wife's behavior",
+description = {"JH":"Checks your PC's RAM. If it's lower or equal to 8GB, the game crashes and it's Game Over, else the game continues", "QH":"The Queen of Hearts executes you. Game Over", "KH": "Adds 50 HP to compensate for his wife's behavior",
                "JD":"Tells you a corny joke", "QD":"Increases your charisma by 12", "KD": "Decreases your strength by 17",
-               "JS":"I'm Jake! Gives you fun facts about bash and C", "QS":"Increases dexterity by 9", "KS":"Takes control of your character and kills you slowly",
-               "JC":"Feeling lucky? Pick a number between 1 & 4. One of these numbers is game over, and the other 3 heal you by their number", "QC":"Did you know that the capital of X is Y?", "KC":"You win bragging rights because you pulled me! A card that's as likely to pull as a 3 of hearts...",
+               "JS":"I'm Jake Errington! Gives you fun facts about bash and C", "QS":"Increases dexterity by 9", "KS":"Takes control of your character and kills you slowly",
+               "JC":"Feeling lucky? Picks a number between 1 & 4. One of these numbers is game over, and the other 3 heal you by their number", "QC":"Decreases your HP by 25", "KC":"You win bragging rights because you pulled me! A card that's as likely to pull as a 3 of hearts...",
                }
 
 def pioche():

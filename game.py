@@ -43,6 +43,8 @@ class Game:
                 self.person.increase_hp(num)
         if key=="QD":
             self.person.increase_charisma(12)
+        if key=="QC":
+            self.person.reduce_hp(25)
         if key=="KD":
             self.person.reduce_charisma(17)
         if key=="QS":
