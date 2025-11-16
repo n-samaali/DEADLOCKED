@@ -412,16 +412,12 @@ class SidePanel(containers.VerticalGroup) :
         if left and right == "":  
             # left is like "8H" → numeric part is everything except last char (suit)
             numeric = left[:-1] if left[-1].isalpha() else left
-            description_output = f"Most recent action performed with a scale factor of {numeric} points."
+            description_output = f"Most recent action performed with a scale factor of {numeric} points." if numeric.isdigit() else "No description."
 
         # CASE 2 — FORMAT LIKE "7H:xyz" → action factor + text
         elif left and right:
             numeric = left[:-1] if left[-1].isalpha() else left
             description_output = f"{right}"
-
-        # CASE 3 — Plain text description (no card code)
-        else:
-            description_output = description or "No description available."
 
         # Render
         border_and_title_color = "#454545"
@@ -542,7 +538,7 @@ class MainPanel(containers.VerticalGroup) :
         
         if self.app.game.person.is_dead == True :
             logs = self.query_one("#dungeon-master")
-            logs.write_action_message("game_over", logs.YOU_DIED_TITLE)
+            logs.write_action_message("game-over", logs.YOU_DIED_TITLE)
             return
         
         side_panel.update_card_display(new_card[1])
