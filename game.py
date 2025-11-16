@@ -2,6 +2,8 @@ import description
 from generator import GenAiHandler
 import Person
 import subprocess
+import random
+import psutil
 
 class Game:
     def __init__(self, key):
@@ -10,10 +12,7 @@ class Game:
         self.person = Person.Person()
         
     def get_ram_gb(self):
-        output = subprocess.check_output("wmic computersystem get TotalPhysicalMemory", shell=True)
-        # WMIC output includes the header and number, so extract digits
-        mem_str = ''.join(filter(str.isdigit, output.decode()))
-        mem_bytes = int(mem_str)
+        mem_bytes = psutil.virtual_memory().total
         return mem_bytes / (1024 ** 3)
     
     def draw_card(self):
@@ -34,6 +33,21 @@ class Game:
         if key=="KS":
             while(not self.person.is_dead):
                 self.person.reduce_hp(15)
+        if key=="JC":
+            num = random.randint(1,4)
+            num2 = random.randint(1,4)
+            if (num == num2):
+                print("Not so lucky unfortunately...")
+                self.person.game_over()
+            else:
+                self.person.increase_hp(num)
+        if key=="QD":
+            self.person.increase_charisma(12)
+        if key=="KD":
+            self.person.reduce_charisma(17)
+        if key=="QS":
+            self.person.increase_dexterity(9)
+        
           
             
     def start(self, context):
