@@ -66,7 +66,7 @@ class ActionButtons(containers.VerticalGroup):
     ActionButtons {
         ItemGrid { margin-bottom: 0;}
         Button { width: 1fr; }
-        border: heavy white 20%;
+        /* border: heavy white 20%; */
         border-title-align: left;
     }
     """
@@ -222,7 +222,7 @@ class Logs(containers.VerticalGroup):
     DEFAULT_CSS = """
     Logs {
         height: 1fr;
-        border: heavy white 20%;
+        /* border: heavy white 20%; */
         border-title-align: left;
     }
     Logs RichLog {
@@ -555,12 +555,12 @@ class GameUI(Screen):
     DEFAULT_CSS = """
     #side_panel {
         width: 2fr;
-        border: heavy white 20%;
         border-title-align: center;
 
     }
     #main_panel {
         width: 5fr; 
+        border: round white 10%;
     }
     """
 
